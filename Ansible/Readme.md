@@ -33,3 +33,37 @@ Pipelining — это механизм оптимизации SSH-подключ
 # Включить конвейеризацию (убирает копирование файлов на сервер)
 pipelining = True
 ````
+
+# Настройка Prometheus Metrics
+* Шаг 1: Создай файл callback_plugins/prometheus_simple.py
+
+Создай папку callback_plugins рядом с твоим ansible.cfg, а внутри неё создай файл prometheus.py и вставь туда этот код:
+
+* Шаг 2: Настрой ansible.cfg
+````
+[defaults]
+callback_plugins = ./callback_plugins
+callbacks_enabled = prometheus_simple
+````
+
+# Шаг 3: Настройка Node Exporter
+Node Exporter должен знать, откуда читать этот файл. Открой конфигурацию сервиса Node Exporter (обычно это /etc/systemd/system/node_exporter.service или файл в /etc/default/node_exporter).
+Найди строку ExecStart и добавь туда флаг --collector.textfile.directory:
+
+````
+ExecStart=/usr/local/bin/node_exporter \
+    --collector.textfile.directory=/var/lib/node_exporter/textfile_collector \
+    # ... остальные твои флаги ...
+````
+
+# Шаг 4: После изменения перезапусти Node Exporter
+````
+sudo systemctl daemon-reload
+sudo systemctl restart node_exporter
+````
+
+# Шаг 5: Проверка и тестирование
+
+1. Запусти любой тестовый плейбук
+2.  Проверь содержимое созданного файла
+
