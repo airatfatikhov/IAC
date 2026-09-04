@@ -35,7 +35,20 @@ pipelining = True
 ````
 
 # Настройка Prometheus Metrics
-* Шаг 1: Создай файл callback_plugins/prometheus_simple.py
+* Шаг 1: Создай файл папки
+Создадим папку для плагина в твоем Ansible-проекте и папку, куда будут сохраняться метрики (стандартная папка для Node Exporter).
+````
+# 1. Создаем папку для плагинов в твоем проекте (например, /opt/ansible)
+mkdir -p /opt/ansible/callback_plugins
+
+# 2. Создаем папку для текстовых метрик Node Exporter
+sudo mkdir -p /var/lib/node_exporter/textfile_collector
+
+# 3. Даем права на запись в эту папку пользователю, от которого запускается Ansible
+# (Замени 'ansible_user' на твоего реального пользователя, например 'root' или 'ubuntu')
+sudo chown -R ansible:ansible /var/lib/node_exporter/textfile_collector
+# 4. Кладем prometheus_simple.py в /opt/ansible/callback_plugins
+````
 
 Создай папку callback_plugins рядом с твоим ansible.cfg, а внутри неё создай файл prometheus.py и вставь туда этот код:
 
@@ -46,7 +59,7 @@ callback_plugins = ./callback_plugins
 callbacks_enabled = prometheus_simple
 ````
 
-# Шаг 3: Настройка Node Exporter
+* Шаг 3: Настройка Node Exporter
 Node Exporter должен знать, откуда читать этот файл. Открой конфигурацию сервиса Node Exporter (обычно это /etc/systemd/system/node_exporter.service или файл в /etc/default/node_exporter).
 Найди строку ExecStart и добавь туда флаг --collector.textfile.directory:
 
@@ -56,13 +69,13 @@ ExecStart=/usr/local/bin/node_exporter \
     # ... остальные твои флаги ...
 ````
 
-# Шаг 4: После изменения перезапусти Node Exporter
+* Шаг 4: После изменения перезапусти Node Exporter
 ````
 sudo systemctl daemon-reload
 sudo systemctl restart node_exporter
 ````
 
-# Шаг 5: Проверка и тестирование
+* Шаг 5: Проверка и тестирование
 
 1. Запусти любой тестовый плейбук
 2.  Проверь содержимое созданного файла
